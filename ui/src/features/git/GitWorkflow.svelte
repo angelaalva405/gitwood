@@ -6,7 +6,6 @@
   import HistoryChildrenDialog from './HistoryChildrenDialog.svelte';
   import StashChangesDialog from './StashChangesDialog.svelte';
   import StashManagerDialog from './StashManagerDialog.svelte';
-  import { stashText } from '../../i18n/stash';
   import type { Commit } from '../browse/types';
   import { browseText as b } from '../../i18n/browse';
   import { integrationText as m } from '../../i18n/integration';
@@ -624,12 +623,10 @@
 {#if busy && !dialog && !integration && upstreamBranch === null}<span class="header-progress" role="status">{progress || 'Working…'}<progress></progress><button onclick={() => void invoke('cancel_write', { generation: browser.generation })}>Cancel</button></span>{/if}
 {#if browser.status?.update_stash && !operation && !browser.status.conflicts}<button disabled={busy} onclick={() => requestSequence('continue')}>{m('restoreSaved')}</button>{/if}
 <span class="remote-actions">
-  <button title={stashText('stash')} disabled={!browser.project || busy || browser.commit.busy || !browser.status || browser.status.changes + browser.status.untracked === 0 || !!browser.status.operation || !!browser.status.conflicts} onclick={() => actions.run('Git.StashChanges')}>{stashText('stash')}</button>
-  <button title={stashText('unstash')} disabled={!browser.project || busy || browser.commit.busy} onclick={() => actions.run('Git.UnstashChanges')}>{stashText('unstash')}</button>
-  <button title={gitText('updateProject')} disabled={!browser.project || busy} onclick={() => handlers.update()}>↓</button>
-  <button title={gitText('pushAction')} disabled={!browser.project || busy} onclick={() => openPush(null)}>↑</button>
+  <button class="icon" title={gitText('updateProject')} aria-label={gitText('updateProject')} disabled={!browser.project || busy} onclick={() => handlers.update()}><img src={ideaIcon('update', appearance.dark)} alt="" width="16" height="16" /></button>
+  <button class="icon" title={gitText('pushAction')} aria-label={gitText('pushAction')} disabled={!browser.project || busy} onclick={() => openPush(null)}><img src={ideaIcon('push', appearance.dark)} alt="" width="16" height="16" /></button>
   {#each integrationActions as kind}<button disabled={!canIntegrate()} onclick={() => runAction(`Git.${kind[0].toUpperCase()}${kind.slice(1)}`)}>{m(kind)}</button>{/each}
-  <button title={gitText('fetch')} disabled={!browser.project || busy} onclick={() => void fetchRemote()}>↻</button>
+  <button class="icon" title={gitText('fetch')} aria-label={gitText('fetch')} disabled={!browser.project || busy} onclick={() => void fetchRemote()}><img src={ideaIcon('fetch', appearance.dark)} alt="" width="16" height="16" /></button>
 </span>
 {#snippet branchSectionIcon(id: string)}<svg class="folder-chevron" class:expanded={!branchFolders.has(id)} viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="m6 4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2" /></svg>{/snippet}
 {#snippet branchFolderIcon(id: string)}<svg class="folder-chevron" class:expanded={branchFolders.has(id)} viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="m6 4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2" /></svg><img class="branch-icon" src={ideaIcon('folder', appearance.dark)} alt="" width="16" height="16" />{/snippet}
@@ -763,7 +760,9 @@
   .branch-control > svg { flex: none; color: var(--text-header-secondary); }
   .branch-control .outgoing { color: var(--text-header-outgoing); }
   .branch-control .incoming { color: var(--text-header-incoming); }
-  .remote-actions { display: inline-flex; gap: 2px; margin-inline-start: auto; }
+  .remote-actions { display: inline-flex; align-items: center; gap: 2px; margin-inline-start: auto; }
+  .remote-actions button.icon { display: inline-flex; align-items: center; justify-content: center; width: var(--toolbar-button-size); height: var(--toolbar-button-size); padding: 0; }
+  .remote-actions button:disabled { opacity: var(--toolbar-disabled-opacity, 0.5); }
   .operation-actions { display: inline-flex; gap: 2px; }
   .operation-actions button { font: inherit; font-size: var(--font-small-size); border: 0; padding: 2px var(--space-inline); color: var(--text-header); background: var(--toolbar-hover-bg); }
   .operation-actions .resolve { color: var(--background-primary); background: var(--status-added); }

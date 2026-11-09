@@ -143,6 +143,9 @@ Upstream/revision: same intellij-community revision recorded above.
 Sources (unmodified SVGs, Apache-2.0 as stated in their headers or by the
 upstream repository license; Copyright 2000-2024 JetBrains s.r.o. and contributors):
   platform/icons/src/expui/nodes/{class,folder,module,star}[_dark].svg
+  From revision d0421b4e8d3ffc904d74f429807ae9b6f61bab16:
+    platform/icons/src/expui/general/{refresh,settings}[_dark].svg,
+    image/colorPicker[_dark].svg, vcs/{fetch,push,update}[_dark].svg
   platform/icons/src/vcs/branch[_dark].svg
   platform/dvcs-impl/shared/resources/icons/new/{currentBranchLabel,
     currentBranchFavoriteLabel}[_dark].svg, {changesPush,changesUpdate}@12x12[_dark].svg

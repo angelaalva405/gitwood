@@ -60,6 +60,7 @@
   import { defaultLayout, layoutRequest, type Layout } from './layout/state';
   import { applyTheme, effectiveTheme, type Theme, type ThemeChoice, type ThemeError } from './theme';
   import { appearance } from './theme/appearance.svelte';
+  import { ideaIcon } from './components/icons/idea';
   import HistoryPreferencesDialog from './features/git/HistoryPreferencesDialog.svelte';
   import ThemeSettingsDialog from './features/settings/ThemeSettingsDialog.svelte';
   import { DEFAULT_DIFF_TAB_LIMIT } from './features/diff/tabs.svelte';
@@ -297,7 +298,7 @@
 <main inert={closing}>
   <header><ProjectWidget {browser} busy={projects.busy} open={() => { void chooseRepository(); }} select={path => { void projects.request(path); }} />
     <GitWorkflow bind:this={workflow} {browser} oncommitpush={() => { browser.commit.result = null; }} onmenuaction={dispatchMenuAction} onshowlog={showLog} ontogglecommit={() => togglePanel('commit')} />
-    <span class="grow"></span><button class="project" aria-label={b('refresh')} title={b('refresh')} disabled={!browser.project} onclick={() => { void browser.refresh({ status: true, refs: true, history: true }); }}>⟳</button><button class="project" aria-label={historyMenuText('preferences')} title={historyMenuText('preferences')} onclick={() => historyPreferencesOpen = true}>⚙</button><button class="project" aria-label={t('themeSettings')} title={t('themeSettings')} onclick={() => themeDialogOpen = true}>◉</button>{#if version}<span>{version}</span>{/if}
+    <span class="grow"></span><button class="project" aria-label={b('refresh')} title={b('refresh')} disabled={!browser.project} onclick={() => { void browser.refresh({ status: true, refs: true, history: true }); }}><img src={ideaIcon('refresh', appearance.dark)} alt="" width="16" height="16" /></button><button class="project" aria-label={historyMenuText('preferences')} title={historyMenuText('preferences')} onclick={() => historyPreferencesOpen = true}><img src={ideaIcon('settings', appearance.dark)} alt="" width="16" height="16" /></button><button class="project" aria-label={t('themeSettings')} title={t('themeSettings')} onclick={() => themeDialogOpen = true}><img src={ideaIcon('colorPicker', appearance.dark)} alt="" width="16" height="16" /></button>{#if version}<span>{version}</span>{/if}
   </header>
   {#if settingsError}<p role="alert">{t('settingsError')}: {settingsError}</p>{/if}
   {#if themeUnavailable}<p role="alert">{t('themeUnavailable')}</p>{/if}
@@ -348,7 +349,9 @@
   main { display: flex; flex-direction: column; height: 100%; }
   header, footer { display: flex; align-items: center; gap: var(--space-inline); flex: none; padding: var(--space-header-y) var(--space-panel-x); background: var(--background-header); color: var(--text-header); border-bottom: var(--border-width) solid var(--separator); }
   header span { color: var(--text-header-secondary); font-size: var(--font-small-size); }
-  .project { background: none; color: inherit; border: 0; }
+  .project { display: inline-flex; align-items: center; justify-content: center; width: var(--toolbar-button-size); height: var(--toolbar-button-size); padding: 0; background: none; color: inherit; border: 0; }
+  .project:hover:not(:disabled) { background: var(--toolbar-hover-bg); }
+  .project:disabled { opacity: var(--toolbar-disabled-opacity, 0.5); }
   .grow { flex: 1; }
   main > p { margin: 0; padding: var(--space-panel-y) var(--space-panel-x); }
   .workspace { display: flex; flex: 1; min-width: 0; min-height: 0; }
