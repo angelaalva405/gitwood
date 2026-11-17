@@ -146,11 +146,10 @@ async fn whole_delete_rename_untracked_special_and_initial_amend() {
     repo.initial().await;
     repo.git("mv", &["A", "renamed"]).await;
     std::fs::remove_file(repo.path("B")).unwrap();
-    let mut names = vec!["-option", "中文 space"];
+    #[cfg(windows)]
+    let names = ["-option", "中文 space"];
     #[cfg(not(windows))]
-    {
-        names.extend(["tab\tname", "line\nname"]);
-    }
+    let names = ["-option", "中文 space", "tab\tname", "line\nname"];
     for name in &names {
         repo.put(name, "new\r\nno newline");
     }
@@ -464,11 +463,10 @@ async fn session_write_rejects_second_write_and_cancels_hook() {
 }
 #[tokio::test]
 async fn partial_patch_special_names_crlf_empty_and_no_newline() {
-    let mut names = vec!["- leading 中文"];
+    #[cfg(windows)]
+    let names = ["- leading 中文"];
     #[cfg(not(windows))]
-    {
-        names.push("tab\tand\nline");
-    }
+    let names = ["- leading 中文", "tab\tand\nline"];
     for name in names {
         for (base, work) in [
             ("one\r\ntwo\r\nthree", "ONE\r\ntwo\r\nTHREE"),

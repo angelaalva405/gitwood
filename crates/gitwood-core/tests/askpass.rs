@@ -283,7 +283,7 @@ async fn an_endless_request_is_dropped_at_the_size_limit() {
     let (asked, handler) = recorder(vec![]);
     let askpass = Askpass::start(handler).unwrap();
     let socket = askpass.client().socket;
-    let closed = tokio::task::spawn_blocking(move || {
+    let rest = tokio::task::spawn_blocking(move || {
         let mut stream = std::os::unix::net::UnixStream::connect(socket).unwrap();
         stream
             .set_read_timeout(Some(Duration::from_secs(10)))
@@ -291,12 +291,15 @@ async fn an_endless_request_is_dropped_at_the_size_limit() {
         // No newline ever arrives; the listener must stop reading instead of buffering it.
         let _ = stream.write_all(&vec![b'x'; 64 * 1024]);
         let mut rest = Vec::new();
-        stream.read_to_end(&mut rest).map(|_| rest)
+        if let Err(err) = stream.read_to_end(&mut rest) {
+            // Linux reports ECONNRESET when the peer closes with unread inbound data;
+            // the listener still dropped the request instead of echoing it.
+            assert_eq!(err.kind(), std::io::ErrorKind::ConnectionReset);
+        }
+        rest
     })
     .await
     .unwrap();
-    assert!(closed
-        .expect("the listener closes the connection")
-        .is_empty());
+    assert!(rest.is_empty());
     assert_eq!(asked.load(Ordering::SeqCst), 0);
 }
