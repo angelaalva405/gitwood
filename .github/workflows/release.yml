@@ -1,8 +1,6 @@
 name: Release artifacts
 
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
 
 # Upload build artifacts only; public GitHub Releases require maintainer approval.
