@@ -78,17 +78,37 @@ fn run(
             Message::Stop => return,
             Message::Event(Ok(event)) if relevant(&directory, &watched, &event) => {
                 pending = true;
-                let next = existing_ancestor(&directory);
-                if next != watched {
-                    let _ = watcher.unwatch(&watched);
-                    if watcher.watch(&next, RecursiveMode::NonRecursive).is_ok() {
-                        watched = next;
-                    }
+                rewatch_if_needed(watcher, &directory, &mut watched);
+            }
+            Message::Event(Err(_)) => {
+                // Removing the watched directory itself breaks the watch on Windows: the
+                // backend reports an error instead of a remove event, and the watch never
+                // resumes. Fall back to the deepest existing ancestor and rescan so theme
+                // changes are noticed again once the directory reappears.
+                if rewatch_if_needed(watcher, &directory, &mut watched) {
+                    pending = true;
                 }
             }
             Message::Event(_) => {}
         }
     }
+}
+
+fn rewatch_if_needed(
+    watcher: &mut RecommendedWatcher,
+    directory: &Path,
+    watched: &mut PathBuf,
+) -> bool {
+    let next = existing_ancestor(directory);
+    if next == *watched {
+        return false;
+    }
+    let _ = watcher.unwatch(watched);
+    if watcher.watch(&next, RecursiveMode::NonRecursive).is_err() {
+        return false;
+    }
+    *watched = next;
+    true
 }
 
 fn relevant(directory: &Path, watched: &Path, event: &notify::Event) -> bool {
