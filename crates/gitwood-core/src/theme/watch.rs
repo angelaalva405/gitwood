@@ -217,12 +217,14 @@ mod tests {
         receiver: &Receiver<(usize, Option<String>)>,
         expected: usize,
     ) -> (usize, Option<String>) {
-        let deadline = Instant::now() + Duration::from_secs(5);
+        // Windows CI delivers file-watch notifications with noticeably higher latency;
+        // keep the deadline generous so slow runners report the actual missing event.
+        let deadline = Instant::now() + Duration::from_secs(15);
         loop {
             let left = deadline.saturating_duration_since(Instant::now());
             let event = receiver
                 .recv_timeout(left)
-                .expect("notify event should reach watcher");
+                .unwrap_or_else(|_| panic!("notify event {expected} should reach watcher"));
             if event.0 >= expected {
                 return event;
             }
