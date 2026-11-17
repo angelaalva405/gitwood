@@ -36,12 +36,22 @@ jobs:
         run: pnpm tauri build --target universal-apple-darwin --bundles dmg
         env:
           APPLE_SIGNING_IDENTITY: '-'
-      - name: Rename DMG to gitwood-<version>.dmg
+      - name: Rename DMG
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ inputs.ref || github.ref_name }}
         run: |
           version=$(jq -r '.version' src-tauri/tauri.conf.json)
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TARGET" >/dev/null 2>&1; then
+            name="gitwood-$version"
+          else
+            # Non-tag builds carry the ref and commit so repeated runs never collide.
+            label=${TARGET//\//-}
+            name="gitwood-$version-$label-$(git rev-parse --short HEAD)"
+          fi
           cd target/universal-apple-darwin/release/bundle/dmg
           for dmg in ./*.dmg; do
-            mv "$dmg" "gitwood-$version.dmg"
+            mv "$dmg" "$name.dmg"
           done
       - name: SHA-256
         working-directory: target/universal-apple-darwin/release/bundle/dmg
