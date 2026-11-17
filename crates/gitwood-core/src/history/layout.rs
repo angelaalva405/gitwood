@@ -17,7 +17,7 @@ pub struct ColorId(pub i32);
 impl ColorId {
     /// Canvas maps this index into `graph.lanes`. Theme changes need no relayout.
     pub fn palette_index(self, palette_len: NonZeroU32) -> u32 {
-        self.0.unsigned_abs() % palette_len.get()
+        self.0.unsigned_abs() % palette_len
     }
 }
 
