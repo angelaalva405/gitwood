@@ -8,9 +8,10 @@ on:
         required: false
         default: ''
 
-# Upload build artifacts only; public GitHub Releases require maintainer approval.
+# Build the macOS DMG, keep it as a workflow artifact, and publish a GitHub
+# Release whenever the build targets a tag.
 permissions:
-  contents: read
+  contents: write
 
 # macOS only for now; Windows and Linux packaging are added later.
 jobs:
@@ -35,6 +36,13 @@ jobs:
         run: pnpm tauri build --target universal-apple-darwin --bundles dmg
         env:
           APPLE_SIGNING_IDENTITY: '-'
+      - name: Rename DMG to gitwood-<version>.dmg
+        run: |
+          version=$(jq -r '.version' src-tauri/tauri.conf.json)
+          cd target/universal-apple-darwin/release/bundle/dmg
+          for dmg in ./*.dmg; do
+            mv "$dmg" "gitwood-$version.dmg"
+          done
       - name: SHA-256
         working-directory: target/universal-apple-darwin/release/bundle/dmg
         run: shasum -a 256 ./*.dmg > SHA256SUMS.txt
@@ -45,3 +53,22 @@ jobs:
             target/universal-apple-darwin/release/bundle/dmg/*.dmg
             target/universal-apple-darwin/release/bundle/dmg/SHA256SUMS.txt
           if-no-files-found: error
+      - name: Publish GitHub Release
+        if: inputs.ref != '' || github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.ref || github.ref_name }}
+        run: |
+          if ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" >/dev/null 2>&1; then
+            echo "$TAG is not a tag; keeping the workflow artifact only."
+            exit 0
+          fi
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --title "Gitwood $TAG" \
+              --notes "Universal macOS build (arm64 + x86_64), ad-hoc signed and not notarized."
+          fi
+          gh release upload "$TAG" \
+            target/universal-apple-darwin/release/bundle/dmg/*.dmg \
+            target/universal-apple-darwin/release/bundle/dmg/SHA256SUMS.txt \
+            --clobber
